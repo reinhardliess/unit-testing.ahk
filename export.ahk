@@ -57,7 +57,7 @@ class unittesting {
 		}
 		this.log.push("Test Number: " this.testTotal "`n")
 		this.log.push("Expected: " param_expected "`n")
-		this.log.push("Actual: " param_actual "`n")
+		this.log.push("Actual:   " param_actual "`n")
 		if (param_msg != "") {
 			this.log.push(param_msg "`n")
 		}
@@ -170,12 +170,12 @@ class unittesting {
 			return 0
 		}
 
-		msgreport := this._buildReport()
+		msgReport := this._buildReport()
 		if (this.failTotal > 0) {
-			msgreport .= "`n=================================`n"
+			msgReport .= "`n=================================`n"
 		}
 		loop % this.log.Count() {
-			msgreport .= this.log[A_Index]
+			msgReport .= this.log[A_Index]
 		}
 
 		; choose the msgbox icon
@@ -184,9 +184,9 @@ class unittesting {
 		} else {
 			l_options := 64
 		}
-		this._stdOut(msgreport)
-		msgbox, % l_options, unit-testing.ahk, % msgreport
-		return msgreport
+		this._stdOut(msgReport)
+		msgbox, % l_options, unit-testing.ahk, % msgReport
+		return msgReport
 	}
 
 
@@ -209,8 +209,8 @@ class unittesting {
 			; do nothing
 		}
 		
-		msgreport := this._buildReport()
-		FileAppend, % msgreport "`n`n", % logpath
+		msgReport := this._buildReport()
+		FileAppend, % msgReport "`n`n", % logpath
 		for key, value in this.log {
 			FileAppend, % value, % logpath
 		}
@@ -218,6 +218,18 @@ class unittesting {
 			Run, % logpath
 		}
 		return true
+	}
+
+	sendReportToDebugConsole() {
+		if (A_IsCompiled) {
+			return 0
+		}
+
+		msgReport := this._buildReport() . "`n"
+		for _, value in this.log {
+			msgReport .= value
+		}
+		OutputDebug, % Rtrim(msgReport, "`r`n")
 	}
 
 	; Internal functions
