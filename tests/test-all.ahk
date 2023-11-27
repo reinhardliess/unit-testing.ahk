@@ -44,5 +44,6 @@ assert.false((1 != 1))
 
 ; wrap up
 assert.writeResultsToFile()
+assert.sendReportToDebugConsole()
 assert.fullReport()
 ExitApp()

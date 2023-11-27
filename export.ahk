@@ -214,6 +214,18 @@ Class unittesting {
 		return true
 	}
 
+	sendReportToDebugConsole() {
+		if (A_IsCompiled) {
+			return 0
+		}
+
+		msgReport := this._buildReport() . "`n"
+		for _, value in this.log {
+			msgReport .= value
+		}
+		OutputDebug(Rtrim(msgReport, "`r`n"))
+	}
+
 	; Internal functions
 	_buildReport() {
 		if (A_IsCompiled) {
