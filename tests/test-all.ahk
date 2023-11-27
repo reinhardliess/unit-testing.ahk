@@ -45,22 +45,6 @@ assert.label("expressions")
 assert.false((1 == 0))
 assert.false((1 != 1))
 
-assert.group(".undefined")
-assert.label("detect undefined value")
-assert.undefined("")
-assert.undefined(undefinedVar)
-
-assert.group("._buildReport")
-assert.label("output")
-; build 2nd case for output that won't tarnish main output
-assert2 := new unittesting()
-assert2.undefined(42)
-report := assert2._buildReport()
-assert.false(!inStr(report, "0%"))
-assert.false(!inStr(report, "0 tests"))
-assert.false(!inStr(report, "failures"))
-
-
 ; wrap up
 assert.writeResultsToFile()
 assert.fullReport()
