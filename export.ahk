@@ -41,62 +41,6 @@ Class unittesting {
 		}
 	}
 
-	_print(value) {
-
-    if (!IsObject(value)) {
-      return value
-    }
-
-    return this._stringify(value)
-  }
-
-  _stringify(param_value) {
-    if (!isObject(param_value)) {
-      return '"' param_value '"'
-    }
-    output := ""
-
-    if (param_value is Array || param_value is Map) {
-      for key, value in param_value {
-        output .= this._stringifyGenerate(key, value)
-      }
-    } else {
-      for key, value in param_value.OwnProps() {
-        output .= this._stringifyGenerate(key, value)
-      }
-    }
-    output := subStr(output, 1, -2)
-    return output
-  }
-
-  _stringifyGenerate(key, value) {
-    output := ""
-    
-    switch {
-      case IsObject(key):
-        ; Skip map elements with object references as keys
-        return ""
-      case key is number:
-        output .= key . ":"
-      default:
-        output .= '"' . key . '":'
-    }
-    
-    switch {
-      case IsObject(value) && value.HasMethod():
-        ; Skip callable objects
-        return ""
-      case IsObject(value):
-        output .= "[" . this._stringify(value) . "]"
-      case value is number:
-        output .= value
-      default:
-        output .= '"' . value . '"'
-    }
-    
-    return output .= ", "
-  }
-	
 	_logTestFail(param_actual, param_expected, param_msg:="") {
 		if (A_IsCompiled) {
 			return 0
@@ -114,7 +58,7 @@ Class unittesting {
 		}
 		this.log.push("Test Number: " this.testTotal "`n")
 		this.log.push("Expected: " param_expected "`n")
-		this.log.push("Actual: " param_actual "`n")
+		this.log.push("Actual:   " param_actual "`n")
 		if (param_msg != "") {
 			this.log.push(param_msg "`n")
 		}
@@ -288,6 +232,62 @@ Class unittesting {
 		return returntext
 	}
 
+	_print(value) {
+
+    if (!IsObject(value)) {
+      return value
+    }
+
+    return this._stringify(value)
+  }
+
+  _stringify(param_value) {
+    if (!isObject(param_value)) {
+      return '"' param_value '"'
+    }
+    output := ""
+
+    if (param_value is Array || param_value is Map) {
+      for key, value in param_value {
+        output .= this._stringifyGenerate(key, value)
+      }
+    } else {
+      for key, value in param_value.OwnProps() {
+        output .= this._stringifyGenerate(key, value)
+      }
+    }
+    output := subStr(output, 1, -2)
+    return output
+  }
+
+  _stringifyGenerate(key, value) {
+    output := ""
+    
+    switch {
+      case IsObject(key):
+        ; Skip map elements with object references as keys
+        return ""
+      case key is number:
+        output .= key . ":"
+      default:
+        output .= '"' . key . '":'
+    }
+    
+    switch {
+      case IsObject(value) && value.HasMethod():
+        ; Skip callable objects
+        return ""
+      case IsObject(value):
+        output .= "[" . this._stringify(value) . "]"
+      case value is number:
+        output .= value
+      default:
+        output .= '"' . value . '"'
+    }
+    
+    return output .= ", "
+  }
+	
 	_stdOut(output:="") {
 		try {
 			DllCall("AttachConsole", "int", -1) || DllCall("AllocConsole")
