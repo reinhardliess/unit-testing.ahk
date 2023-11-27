@@ -1,4 +1,6 @@
-class unittesting {
+#Requires AutoHotkey v2.0
+
+Class unittesting {
 
 	__New() {
 		this.testTotal := 0
@@ -13,7 +15,6 @@ class unittesting {
 
 		this.logresult_dir := A_ScriptDir "\result.tests.log"
 	}
-
 
 	test(param_actual:="_Missing_Parameter_", param_expected:="_Missing_Parameter_") {
 		if (A_IsCompiled) {
@@ -30,7 +31,7 @@ class unittesting {
 
 		; create
 		this.testTotal++
-		if (param_actual != param_expected) {
+		if (param_actual !== param_expected) {
 			this._logTestFail(param_actual, param_expected)
 			return false
 		} else {
@@ -40,6 +41,62 @@ class unittesting {
 		}
 	}
 
+	_print(value) {
+
+    if (!IsObject(value)) {
+      return value
+    }
+
+    return this._stringify(value)
+  }
+
+  _stringify(param_value) {
+    if (!isObject(param_value)) {
+      return '"' param_value '"'
+    }
+    output := ""
+
+    if (param_value is Array || param_value is Map) {
+      for key, value in param_value {
+        output .= this._stringifyGenerate(key, value)
+      }
+    } else {
+      for key, value in param_value.OwnProps() {
+        output .= this._stringifyGenerate(key, value)
+      }
+    }
+    output := subStr(output, 1, -2)
+    return output
+  }
+
+  _stringifyGenerate(key, value) {
+    output := ""
+    
+    switch {
+      case IsObject(key):
+        ; Skip map elements with object references as keys
+        return ""
+      case key is number:
+        output .= key . ":"
+      default:
+        output .= '"' . key . '":'
+    }
+    
+    switch {
+      case IsObject(value) && value.HasMethod():
+        ; Skip callable objects
+        return ""
+      case IsObject(value):
+        output .= "[" . this._stringify(value) . "]"
+      case value is number:
+        output .= value
+      default:
+        output .= '"' . value . '"'
+    }
+    
+    return output .= ", "
+  }
+	
 	_logTestFail(param_actual, param_expected, param_msg:="") {
 		if (A_IsCompiled) {
 			return 0
@@ -64,7 +121,6 @@ class unittesting {
 		this.log.push("`n")
 	}
 
-
 	true(param_actual:="_Missing_Parameter_") {
 		if (A_IsCompiled) {
 			return 0
@@ -82,7 +138,6 @@ class unittesting {
 		this.test(param_actual, "true")
 		return false
 	}
-
 
 	false(param_actual:="_Missing_Parameter_") {
 		if (A_IsCompiled) {
@@ -102,7 +157,6 @@ class unittesting {
 		return false
 	}
 
-
 	equal(param_actual:="_Missing_Parameter_", param_expected:="_Missing_Parameter_") {
 		if (A_IsCompiled) {
 			return 0
@@ -111,7 +165,6 @@ class unittesting {
 		; create
 		return this.test(param_actual, param_expected)
 	}
-
 
 	notEqual(param_actual:="_Missing_Parameter_", param_expected:="_Missing_Parameter_") {
 		if (A_IsCompiled) {
@@ -124,7 +177,7 @@ class unittesting {
 
 		; create
 		this.testTotal += 1
-		if (param_actual != param_expected) {
+		if (param_actual !== param_expected) {
 			this.successTotal++
 			return true
 		} else {
@@ -154,28 +207,26 @@ class unittesting {
 		return
 	}
 
-
 	report() {
 		if (A_IsCompiled) {
 			return 0
 		}
 
-		msgbox, % this._buildReport()
+		MsgBox(this._buildReport())
 		return true
 	}
-
 
 	fullReport() {
 		if (A_IsCompiled) {
 			return 0
 		}
 
-		msgreport := this._buildReport()
+		msgReport := this._buildReport()
 		if (this.failTotal > 0) {
-			msgreport .= "`n=================================`n"
+			msgReport .= "`n=================================`n"
 		}
-		loop % this.log.Count() {
-			msgreport .= this.log[A_Index]
+		Loop this.log.Length {
+			msgReport .= this.log[A_Index]
 		}
 
 		; choose the msgbox icon
@@ -184,11 +235,10 @@ class unittesting {
 		} else {
 			l_options := 64
 		}
-		this._stdOut(msgreport)
-		msgbox, % l_options, unit-testing.ahk, % msgreport
-		return msgreport
+		this._stdOut(msgReport)
+		MsgBox(msgReport, "unit-testing.ahk", l_options)
+		return msgReport
 	}
-
 
 	writeResultsToFile(param_filepath:="", openFile:=0) {
 		if (A_IsCompiled) {
@@ -204,18 +254,18 @@ class unittesting {
 
 		; create
 		try {
-			FileDelete, % logpath
+			FileDelete(logpath)
 		} catch {
 			; do nothing
 		}
-		
-		msgreport := this._buildReport()
-		FileAppend, % msgreport "`n`n", % logpath
+
+		msgReport := this._buildReport()
+		FileAppend(msgReport "`n`n", logpath)
 		for key, value in this.log {
-			FileAppend, % value, % logpath
+			FileAppend(value, logpath)
 		}
 		if (openFile) {
-			Run, % logpath
+			Run(logpath)
 		}
 		return true
 	}
@@ -238,37 +288,10 @@ class unittesting {
 		return returntext
 	}
 
-
-	_print(param_obj) {
-		if (IsObject(param_obj)) {
-			for key, value in param_obj {
-				if key is not Number
-				{
-					output .= """" . key . """:"
-				} else {
-					output .= key . ":"
-				}
-				if (IsObject(value)) {
-					output .= "[" . this._print(value) . "]"
-				} else if value is not Number
-				{
-					output .= """" . value . """"
-				}
-				else {
-					output .= value
-				}
-				output .= ", "
-			}
-			StringTrimRight, output, output, 2
-			return output
-		}
-		return param_obj
-	}
-
 	_stdOut(output:="") {
 		try {
 			DllCall("AttachConsole", "int", -1) || DllCall("AllocConsole")
-			FileAppend, % output "`n", CONOUT$
+			FileAppend(output "`n", "CONOUT$")
 			DllCall("FreeConsole")
 		} catch error {
 			return false
