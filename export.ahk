@@ -146,7 +146,7 @@ class unittesting {
 		try {
 			param_function.call()
 		} catch error {
-			errType := this._getObjectType(error)
+			errType := this._getType(error)
 			switch {
 				case param_errType:
 					expected := format("Should throw '{1}'", param_errType)
@@ -173,21 +173,31 @@ class unittesting {
 	}
 
 	/**
-	  * Returns type of object
-	  * @param {object} object - object to test
+	  * Returns type of variable
+	  * @param {any} var - variable to test
 	  * @returns {string} type
 	  */
-	_getObjectType(object) {
+	_getType(var) {
 		switch {
-		case className := object.__class:
+		case isObject(var) && className := var.__class:
 			return className
-		case isObject(object):
+		case isObject(var):
 			return "object"
+		case this._isNumber(var):
+			return "number"
 		default:
-			return ""
+			return "string"
 		}
 	}
-
+	
+	_isNumber(var) {
+		if var is number
+		{
+			return true
+		}
+		return false
+	}
+	
 	label(param) {
 		if (A_IsCompiled) {
 			return 0
