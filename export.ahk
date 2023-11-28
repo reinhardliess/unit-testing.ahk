@@ -16,7 +16,7 @@ Class unittesting {
 		this.logresult_dir := A_ScriptDir "\result.tests.log"
 	}
 
-	test(param_actual:="_Missing_Parameter_", param_expected:="_Missing_Parameter_") {
+	test(param_actual := "_Missing_Parameter_", param_expected := "_Missing_Parameter_") {
 		if (A_IsCompiled) {
 			return 0
 		}
@@ -41,7 +41,7 @@ Class unittesting {
 		}
 	}
 
-	_logTestFail(param_actual, param_expected, param_msg:="") {
+	_logTestFail(param_actual, param_expected, param_msg := "") {
 		if (A_IsCompiled) {
 			return 0
 		}
@@ -65,7 +65,7 @@ Class unittesting {
 		this.log.push("`n")
 	}
 
-	true(param_actual:="_Missing_Parameter_") {
+	true(param_actual := "_Missing_Parameter_") {
 		if (A_IsCompiled) {
 			return 0
 		}
@@ -75,7 +75,7 @@ Class unittesting {
 			this.test("true", "true")
 			return true
 		}
-		if (param_actual == false){
+		if (param_actual == false) {
 			this.test("false", "true")
 			return false
 		}
@@ -83,7 +83,7 @@ Class unittesting {
 		return false
 	}
 
-	false(param_actual:="_Missing_Parameter_") {
+	false(param_actual := "_Missing_Parameter_") {
 		if (A_IsCompiled) {
 			return 0
 		}
@@ -93,7 +93,7 @@ Class unittesting {
 			this.test("false", "false")
 			return true
 		}
-		if (param_actual == true){
+		if (param_actual == true) {
 			this.test("true", "false")
 			return false
 		}
@@ -101,7 +101,7 @@ Class unittesting {
 		return false
 	}
 
-	equal(param_actual:="_Missing_Parameter_", param_expected:="_Missing_Parameter_") {
+	equal(param_actual := "_Missing_Parameter_", param_expected := "_Missing_Parameter_") {
 		if (A_IsCompiled) {
 			return 0
 		}
@@ -110,7 +110,7 @@ Class unittesting {
 		return this.test(param_actual, param_expected)
 	}
 
-	notEqual(param_actual:="_Missing_Parameter_", param_expected:="_Missing_Parameter_") {
+	notEqual(param_actual := "_Missing_Parameter_", param_expected := "_Missing_Parameter_") {
 		if (A_IsCompiled) {
 			return 0
 		}
@@ -184,7 +184,7 @@ Class unittesting {
 		return msgReport
 	}
 
-	writeResultsToFile(param_filepath:="", openFile:=0) {
+	writeResultsToFile(param_filepath := "", openFile := 0) {
 		if (A_IsCompiled) {
 			return 0
 		}
@@ -233,7 +233,7 @@ Class unittesting {
 		}
 
 		; create
-		this.percentsuccess := floor( ( this.successTotal / this.testTotal ) * 100 )
+		this.percentsuccess := floor((this.successTotal / this.testTotal) * 100)
 		returntext := this.testTotal " tests completed with " this.percentsuccess "% success (" this.failTotal " failures)"
 		if (this.failTotal = 1) {
 			returntext := StrReplace(returntext, "failures", "failure")
@@ -246,61 +246,59 @@ Class unittesting {
 
 	_print(value) {
 
-    if (!IsObject(value)) {
-      return value
-    }
+		if (!IsObject(value)) {
+			return value
+		}
 
-    return this._stringify(value)
-  }
+		return this._stringify(value)
+	}
 
-  _stringify(param_value) {
-    if (!isObject(param_value)) {
-      return '"' param_value '"'
-    }
-    output := ""
+	_stringify(param_value) {
+		if (!isObject(param_value)) {
+			return '"' param_value '"'
+		}
+		
+		output := ""
+		iterator := (param_value is Array || param_value is Map) 
+			? param_value 
+			: param_value.OwnProps()
 
-    if (param_value is Array || param_value is Map) {
-      for key, value in param_value {
-        output .= this._stringifyGenerate(key, value)
-      }
-    } else {
-      for key, value in param_value.OwnProps() {
-        output .= this._stringifyGenerate(key, value)
-      }
-    }
-    output := subStr(output, 1, -2)
-    return output
-  }
+		for key, value in iterator {
+			output .= this._stringifyGenerate(key, value)
+		}
+		output := subStr(output, 1, -2)
+		return output
+	}
 
-  _stringifyGenerate(key, value) {
-    output := ""
-    
-    switch {
-      case IsObject(key):
-        ; Skip map elements with object references as keys
-        return ""
-      case key is number:
-        output .= key . ":"
-      default:
-        output .= '"' . key . '":'
-    }
-    
-    switch {
-      case IsObject(value) && value.HasMethod():
-        ; Skip callable objects
-        return ""
-      case IsObject(value):
-        output .= "[" . this._stringify(value) . "]"
-      case value is number:
-        output .= value
-      default:
-        output .= '"' . value . '"'
-    }
-    
-    return output .= ", "
-  }
-	
-	_stdOut(output:="") {
+	_stringifyGenerate(key, value) {
+		output := ""
+
+		switch {
+			case IsObject(key):
+				; Skip map elements with object references as keys
+				return ""
+			case key is number:
+				output .= key . ":"
+			default:
+				output .= '"' . key . '":'
+		}
+
+		switch {
+			case IsObject(value) && value.HasMethod():
+				; Skip callable objects
+				return ""
+			case IsObject(value):
+				output .= "[" . this._stringify(value) . "]"
+			case value is number:
+				output .= value
+			default:
+				output .= '"' . value . '"'
+		}
+
+		return output .= ", "
+	}
+
+	_stdOut(output := "") {
 		try {
 			DllCall("AttachConsole", "int", -1) || DllCall("AllocConsole")
 			FileAppend(output "`n", "CONOUT$")
