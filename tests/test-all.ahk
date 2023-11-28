@@ -18,9 +18,32 @@ assert.equal({key: "value"}, {key: "value" })
 
 assert.group(".notEqual")
 assert.label("vars, arrays, objects")
-assert.notEqual("hello", "hello!")
+assert.notEqual("hello", "Hello")
 assert.notEqual(["hello"], ["world"])
 assert.notEqual({key: "value"}, {key: "differentValue"})
+
+
+assert.group(".toThrow")
+assert.label("function throwing error")
+assert.toThrow(func("createError"))
+
+assert.label("function throwing error of type CustomError")
+assert.toThrow(func("createCustomError"), "CustomError")
+
+assert2 := new unittesting()
+assert.label("function not throwing error")
+assert2.toThrow(func("createNoError"))
+assert.test(assert2.failTotal, 1)
+
+assert.label("function not throwing error of type 'TypeError'")
+assert2.toThrow(func("createCustomError"), "TypeError")
+assert.test(assert2.failTotal, 2)
+
+assert.label("function throwing error, but not of any type")
+assert2.toThrow(func("createError"), "TypeError")
+assert.test(assert2.failTotal, 3)
+; assert2.sendReportToDebugConsole()
+; OutputDebug, % "`n"
 
 
 assert.group(".true")

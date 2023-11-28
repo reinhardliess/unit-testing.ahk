@@ -48,7 +48,7 @@ Class unittesting {
 
 		; create
 		this.failTotal++
-		if (this.labelVar != this.lastlabel) {
+		if (this.labelVar !== this.lastlabel) {
 			this.lastlabel := this.labelVar
 			if (this.groupVar) {
 				this.log.push("`n== " this.groupVar " - " this.labelVar " ==`n")
@@ -128,6 +128,63 @@ Class unittesting {
 			this._logTestFail(param_actual, param_expected, "They were Expected to be DIFFERENT")
 
 			return false
+		}
+	}
+
+	/**
+	  * Matcher: expects function to throw error
+	  * @param {function} param_function - function to check
+	  * @param {string} [param_errType] - type of error
+	  * @returns {boolean}
+	  */
+	toThrow(param_function, param_errType:="") {
+		didThrow := false
+		actual := "Didn't throw error"
+		expected := "Should throw error"
+		this.testTotal += 1
+
+		try {
+			param_function.call()
+		} catch error {
+			errType := this._getObjectType(error)
+			switch {
+				case param_errType:
+					expected := format("Should throw '{1}'", param_errType)
+					didThrow := param_errType = errType
+					if (!didThrow) {
+						switch {
+							case errType == "":
+								actual := format("Didn't throw any error type")
+							default:
+								actual := format("Threw '{1}'", errType)
+						}
+					}
+				default:
+					didThrow := true
+			}
+		}
+
+		if (didThrow) {
+			this.successTotal++
+		} else {
+			this._logTestFail(actual, expected)
+		}
+		return didThrow
+	}
+
+	/**
+	  * Returns type of object
+	  * @param {object} object - object to test
+	  * @returns {string} type
+	  */
+	_getObjectType(object) {
+		switch {
+		case className := object.__class:
+			return className
+		case isObject(object):
+			return "object"
+		default:
+			return ""
 		}
 	}
 

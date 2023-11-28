@@ -36,3 +36,4 @@ yarn.lock
 docs/oldcodestyle.css
 methodslist.txt
 package-lock*
+.vscode/settings.json
