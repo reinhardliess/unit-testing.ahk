@@ -145,19 +145,14 @@ Class unittesting {
 
 		try {
 			param_function.call()
-		} catch error {
-			errType := this._getObjectType(error)
+		} catch Any as error {
+			errType := Type(error)
 			switch {
 				case param_errType:
 					expected := format("Should throw '{1}'", param_errType)
 					didThrow := param_errType = errType
 					if (!didThrow) {
-						switch {
-							case errType == "":
-								actual := format("Didn't throw any error type")
-							default:
-								actual := format("Threw '{1}'", errType)
-						}
+						actual := format("Threw '{1}'", errType)
 					}
 				default:
 					didThrow := true
@@ -170,22 +165,6 @@ Class unittesting {
 			this._logTestFail(actual, expected)
 		}
 		return didThrow
-	}
-
-	/**
-	  * Returns type of object
-	  * @param {object} object - object to test
-	  * @returns {string} type
-	  */
-	_getObjectType(object) {
-		switch {
-		case className := object.__class:
-			return className
-		case isObject(object):
-			return "object"
-		default:
-			return ""
-		}
 	}
 
 	label(param) {
