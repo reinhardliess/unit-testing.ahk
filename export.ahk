@@ -1,3 +1,5 @@
+#Requires AutoHotkey >=1.1.35 <1.2
+
 class unittesting {
 
 	__New() {
@@ -14,7 +16,6 @@ class unittesting {
 		this.logresult_dir := A_ScriptDir "\result.tests.log"
 	}
 
-
 	test(param_actual:="_Missing_Parameter_", param_expected:="_Missing_Parameter_") {
 		if (A_IsCompiled) {
 			return 0
@@ -30,7 +31,7 @@ class unittesting {
 
 		; create
 		this.testTotal++
-		if (param_actual != param_expected) {
+		if (param_actual !== param_expected) {
 			this._logTestFail(param_actual, param_expected)
 			return false
 		} else {
@@ -47,7 +48,7 @@ class unittesting {
 
 		; create
 		this.failTotal++
-		if (this.labelVar != this.lastlabel) {
+		if (this.labelVar !== this.lastlabel) {
 			this.lastlabel := this.labelVar
 			if (this.groupVar) {
 				this.log.push("`n== " this.groupVar " - " this.labelVar " ==`n")
@@ -63,7 +64,6 @@ class unittesting {
 		}
 		this.log.push("`n")
 	}
-
 
 	true(param_actual:="_Missing_Parameter_") {
 		if (A_IsCompiled) {
@@ -83,7 +83,6 @@ class unittesting {
 		return false
 	}
 
-
 	false(param_actual:="_Missing_Parameter_") {
 		if (A_IsCompiled) {
 			return 0
@@ -102,7 +101,6 @@ class unittesting {
 		return false
 	}
 
-
 	equal(param_actual:="_Missing_Parameter_", param_expected:="_Missing_Parameter_") {
 		if (A_IsCompiled) {
 			return 0
@@ -111,7 +109,6 @@ class unittesting {
 		; create
 		return this.test(param_actual, param_expected)
 	}
-
 
 	notEqual(param_actual:="_Missing_Parameter_", param_expected:="_Missing_Parameter_") {
 		if (A_IsCompiled) {
@@ -124,13 +121,70 @@ class unittesting {
 
 		; create
 		this.testTotal += 1
-		if (param_actual != param_expected) {
+		if (param_actual !== param_expected) {
 			this.successTotal++
 			return true
 		} else {
 			this._logTestFail(param_actual, param_expected, "They were Expected to be DIFFERENT")
 
 			return false
+		}
+	}
+
+	/**
+	  * Matcher: expects function to throw error
+	  * @param {function} param_function - function to check
+	  * @param {string} [param_errType] - type of error
+	  * @returns {boolean}
+	  */
+	toThrow(param_function, param_errType:="") {
+		didThrow := false
+		actual := "Didn't throw error"
+		expected := "Should throw error"
+		this.testTotal += 1
+
+		try {
+			param_function.call()
+		} catch error {
+			errType := this._getObjectType(error)
+			switch {
+				case param_errType:
+					expected := format("Should throw '{1}'", param_errType)
+					didThrow := param_errType = errType
+					if (!didThrow) {
+						switch {
+							case errType == "":
+								actual := format("Didn't throw any error type")
+							default:
+								actual := format("Threw '{1}'", errType)
+						}
+					}
+				default:
+					didThrow := true
+			}
+		}
+
+		if (didThrow) {
+			this.successTotal++
+		} else {
+			this._logTestFail(actual, expected)
+		}
+		return didThrow
+	}
+
+	/**
+	  * Returns type of object
+	  * @param {object} object - object to test
+	  * @returns {string} type
+	  */
+	_getObjectType(object) {
+		switch {
+		case className := object.__class:
+			return className
+		case isObject(object):
+			return "object"
+		default:
+			return ""
 		}
 	}
 
@@ -154,7 +208,6 @@ class unittesting {
 		return
 	}
 
-
 	report() {
 		if (A_IsCompiled) {
 			return 0
@@ -163,7 +216,6 @@ class unittesting {
 		msgbox, % this._buildReport()
 		return true
 	}
-
 
 	fullReport() {
 		if (A_IsCompiled) {
@@ -189,7 +241,6 @@ class unittesting {
 		return msgReport
 	}
 
-
 	writeResultsToFile(param_filepath:="", openFile:=0) {
 		if (A_IsCompiled) {
 			return 0
@@ -208,7 +259,7 @@ class unittesting {
 		} catch {
 			; do nothing
 		}
-		
+
 		msgReport := this._buildReport()
 		FileAppend, % msgReport "`n`n", % logpath
 		for key, value in this.log {
@@ -220,6 +271,9 @@ class unittesting {
 		return true
 	}
 
+	/**
+	  * Outputs error report to debug console
+	  */
 	sendReportToDebugConsole() {
 		if (A_IsCompiled) {
 			return 0
@@ -249,7 +303,6 @@ class unittesting {
 		}
 		return returntext
 	}
-
 
 	_print(param_obj) {
 		if (IsObject(param_obj)) {
