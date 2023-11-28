@@ -51,11 +51,11 @@ assert.label("function not throwing error")
 assert2.toThrow(createNoError)
 assert.test(assert2.failTotal, 1)
 
-assert.label("function not throwing error of type 'TypeError'")
+assert.label("function throwing 'CustomError', expecting 'TypeError'")
 assert2.toThrow(createCustomError, "TypeError")
 assert.test(assert2.failTotal, 2)
 
-assert.label("function throwing error, but of type 'string'")
+assert.label("function throwing error string, expecting 'TypeError'")
 assert2.toThrow(createError, "TypeError")
 assert.test(assert2.failTotal, 3)
 ; assert2.sendReportToDebugConsole()
