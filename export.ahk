@@ -134,38 +134,58 @@ Class unittesting {
 	/**
 	  * Matcher: expects function to throw error
 	  * @param {function} param_function - function to check
-	  * @param {string} [param_errType] - type of error
+	  * @param {object} [param_errType] - error class object
 	  * @returns {boolean}
 	  */
 	toThrow(param_function, param_errType:="") {
-		didThrow := false
+		if (param_errType && !isObject(param_errType)) {
+			throw Error(format("{1}: TypeError: Didn't receive object for param_errType", A_ThisFunc))
+		}
+
+		hasPassedTest := false
 		actual := "Didn't throw error"
 		expected := "Should throw error"
 		this.testTotal += 1
 
 		try {
 			param_function.call()
-		} catch Any as error {
-			errType := Type(error)
-			switch {
-				case param_errType:
-					expected := format("Should throw '{1}'", param_errType)
-					didThrow := param_errType = errType
-					if (!didThrow) {
-						actual := format("Threw '{1}'", errType)
-					}
-				default:
-					didThrow := true
+		} catch Any as err {
+			hasPassedTest := true
+			if (param_errType) {
+				ret := this._toThrowCheckErrorClass(err, param_errType)
+				hasPassedTest := ret.hasPassedTest, actual := ret.actual, expected := ret.expected
 			}
 		}
 
-		if (didThrow) {
+		if (hasPassedTest) {
 			this.successTotal++
 		} else {
 			this._logTestFail(actual, expected)
 		}
-		return didThrow
+		return hasPassedTest
 	}
+
+	/**
+	  * Checks whether actual error matches expected error
+	  * @param {object} actualError
+	  * @param {object} expectedError
+	  * @returns {object} { hasPassedTest: boolean, actual: string, expected: string}
+	  */
+	_toThrowCheckErrorClass(actualError, expectedError) {
+		hasPassedTest := true
+		actualErrType   := Type(actualError)
+		expectedErrType := Type(expectedError)
+		if (expectedErrType = "Class") {
+			expectedErrType := expectedError.Prototype.__Class 
+		}
+		actual := expected := ""
+		if (actualErrType != expectedErrType) {
+			hasPassedTest := false
+			expected := format("Should throw '{1}'", expectedErrType)
+			actual   := format("Threw '{1}'", actualErrType)
+		}
+	return {hasPassedTest: hasPassedTest, actual: actual, expected: expected}
+}
 
 	label(param) {
 		if (A_IsCompiled) {

@@ -38,13 +38,16 @@ assert.notEqual("hello", "Hello")
 assert.notEqual(["hello"], ["world"])
 assert.notEqual({key: "value"}, {key: "differentValue"})
 
-
+;; .toThrow
 assert.group(".toThrow")
 assert.label("function throwing error")
 assert.toThrow(createError)
 
-assert.label("function throwing error of type CustomError")
-assert.toThrow(createCustomError, "CustomError")
+assert.label("function throwing error of type CustomError (class object)")
+assert.toThrow(createCustomError, CustomError)
+
+assert.label("function throwing error of CustomError (instance)")
+assert.toThrow(createCustomError, CustomError())
 
 assert2 := unittesting()
 assert.label("function not throwing error")
@@ -52,11 +55,11 @@ assert2.toThrow(createNoError)
 assert.test(assert2.failTotal, 1)
 
 assert.label("function throwing 'CustomError', expecting 'TypeError'")
-assert2.toThrow(createCustomError, "TypeError")
+assert2.toThrow(createCustomError, TypeError)
 assert.test(assert2.failTotal, 2)
 
 assert.label("function throwing error string, expecting 'TypeError'")
-assert2.toThrow(createError, "TypeError")
+assert2.toThrow(createError, TypeError)
 assert.test(assert2.failTotal, 3)
 ; assert2.sendReportToDebugConsole()
 ; OutputDebug "`n"
