@@ -1,10 +1,9 @@
 #Include "..\export.ahk"
 
+; to test .toThrow() matcher
 Class CustomError {
-  
 }
 
-; to test .toThrow() matcher
 createError() {
   Throw "Error"
 }
@@ -15,6 +14,7 @@ createCustomError() {
 
 createNoError() {
 }
+; to test .toThrow() matcher end
 
 assert := unittesting()
 
