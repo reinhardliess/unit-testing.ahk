@@ -58,7 +58,7 @@ class unittesting {
 		}
 		this.log.push("Test Number: " this.testTotal "`n")
 		this.log.push("Expected: " param_expected "`n")
-		this.log.push("Actual:   " param_actual "`n")
+		this.log.push("Actual: " param_actual "`n")
 		if (param_msg != "") {
 			this.log.push(param_msg "`n")
 		}
@@ -134,51 +134,63 @@ class unittesting {
 	/**
 	  * Matcher: expects function to throw error
 	  * @param {function} param_function - function to check
-	  * @param {string} [param_errType] - type of error
+	  * @param {object} [param_errType] - error class object
 	  * @returns {boolean}
 	  */
 	toThrow(param_function, param_errType:="") {
-		didThrow := false
+		if (param_errType && !isObject(param_errType)) {
+			throw Exception(format("{1}: TypeError: Didn't receive object for param_errType", A_ThisFunc))
+		}
+
+		hasPassedTest := false
 		actual := "Didn't throw error"
 		expected := "Should throw error"
 		this.testTotal += 1
 
 		try {
 			param_function.call()
-		} catch error {
-			errType := this._getType(error)
-			switch {
-				case param_errType:
-					expected := format("Should throw '{1}'", param_errType)
-					didThrow := param_errType = errType
-					if (!didThrow) {
-						switch {
-							case errType == "":
-								actual := format("Didn't throw any error type")
-							default:
-								actual := format("Threw '{1}'", errType)
-						}
-					}
-				default:
-					didThrow := true
+		} catch err {
+			hasPassedTest := true
+			if (param_errType) {
+				ret := this._toThrowCheckErrorClass(err, param_errType)
+				hasPassedTest := ret.hasPassedTest, actual := ret.actual, expected := ret.expected
 			}
 		}
 
-		if (didThrow) {
+		if (hasPassedTest) {
 			this.successTotal++
 		} else {
 			this._logTestFail(actual, expected)
 		}
-		return didThrow
+		return hasPassedTest
 	}
 
 	/**
-	  * Returns type of variable
-	  * @param {any} var - variable to test
-	  * @returns {string} type
+	  * Checks whether actual error matches expected error
+	  * @param {object} actualError
+	  * @param {object} expectedError
+	  * @returns {object} { hasPassedTest: boolean, actual: string, expected: string}
 	  */
-	_getType(var) {
-		switch {
+	_toThrowCheckErrorClass(actualError, expectedError) {
+		hasPassedTest := true
+		actualErrType   := this._getType(actualError)
+		expectedErrType := this._getType(expectedError)
+		actual := expected := ""
+		if (actualErrType != expectedErrType) {
+			hasPassedTest := false
+			expected := format("Should throw '{1}'", expectedErrType)
+			actual   := format("Threw '{1}'", actualErrType)
+		}
+	return {hasPassedTest: hasPassedTest, actual: actual, expected: expected}
+}
+
+/**
+  * Returns type of variable
+  * @param {any} var - variable to test
+  * @returns {string} type
+  */
+_getType(var) {
+	switch {
 		case isObject(var) && className := var.__class:
 			return className
 		case isObject(var):
@@ -187,167 +199,167 @@ class unittesting {
 			return "number"
 		default:
 			return "string"
-		}
 	}
-	
-	_isNumber(var) {
-		if var is number
-		{
-			return true
+}
+
+_isNumber(var) {
+	if var is number
+	{
+		return true
+	}
+	return false
+}
+
+label(param) {
+	if (A_IsCompiled) {
+		return 0
+	}
+
+	this.labelVar := param
+	return
+}
+
+group(param) {
+	if (A_IsCompiled) {
+		return 0
+	}
+
+	this.groupVar := param
+	this.labelVar := ""
+	this.lastlabel := "_"
+	return
+}
+
+report() {
+	if (A_IsCompiled) {
+		return 0
+	}
+
+	msgbox, % this._buildReport()
+	return true
+}
+
+fullReport() {
+	if (A_IsCompiled) {
+		return 0
+	}
+
+	msgReport := this._buildReport()
+	if (this.failTotal > 0) {
+		msgReport .= "`n=================================`n"
+	}
+	loop % this.log.Count() {
+		msgReport .= this.log[A_Index]
+	}
+
+	; choose the msgbox icon
+	if (this.failTotal > 0) {
+		l_options := 48
+	} else {
+		l_options := 64
+	}
+	this._stdOut(msgReport)
+	msgbox, % l_options, unit-testing.ahk, % msgReport
+	return msgReport
+}
+
+writeResultsToFile(param_filepath:="", openFile:=0) {
+	if (A_IsCompiled) {
+		return 0
+	}
+
+	; prepare
+	if (param_filepath != "") {
+		logpath := param_filepath
+	} else {
+		logpath := this.logresult_dir
+	}
+
+	; create
+	try {
+		FileDelete, % logpath
+	} catch {
+		; do nothing
+	}
+
+	msgReport := this._buildReport()
+	FileAppend, % msgReport "`n`n", % logpath
+	for key, value in this.log {
+		FileAppend, % value, % logpath
+	}
+	if (openFile) {
+		Run, % logpath
+	}
+	return true
+}
+
+/**
+  * Outputs error report to debug console
+  */
+sendReportToDebugConsole() {
+	if (A_IsCompiled) {
+		return 0
+	}
+
+	msgReport := this._buildReport() . "`n"
+	for _, value in this.log {
+		msgReport .= value
+	}
+	OutputDebug, % Rtrim(msgReport, "`r`n")
+}
+
+; Internal functions
+_buildReport() {
+	if (A_IsCompiled) {
+		return 0
+	}
+
+	; create
+	this.percentsuccess := floor( ( this.successTotal / this.testTotal ) * 100 )
+	returntext := this.testTotal " tests completed with " this.percentsuccess "% success (" this.failTotal " failures)"
+	if (this.failTotal = 1) {
+		returntext := StrReplace(returntext, "failures", "failure")
+	}
+	if (this.testTotal = 1) {
+		returntext := StrReplace(returntext, "tests", "test")
+	}
+	return returntext
+}
+
+_print(param_obj) {
+	if (IsObject(param_obj)) {
+		for key, value in param_obj {
+			if key is not Number
+			{
+				output .= """" . key . """:"
+			} else {
+				output .= key . ":"
+			}
+			if (IsObject(value)) {
+				output .= "[" . this._print(value) . "]"
+			} else if value is not Number
+			{
+				output .= """" . value . """"
+			}
+			else {
+				output .= value
+			}
+			output .= ", "
 		}
+		StringTrimRight, output, output, 2
+		return output
+	}
+	return param_obj
+}
+
+_stdOut(output:="") {
+	try {
+		DllCall("AttachConsole", "int", -1) || DllCall("AllocConsole")
+		FileAppend, % output "`n", CONOUT$
+		DllCall("FreeConsole")
+	} catch error {
 		return false
 	}
-	
-	label(param) {
-		if (A_IsCompiled) {
-			return 0
-		}
-
-		this.labelVar := param
-		return
-	}
-
-	group(param) {
-		if (A_IsCompiled) {
-			return 0
-		}
-
-		this.groupVar := param
-		this.labelVar := ""
-		this.lastlabel := "_"
-		return
-	}
-
-	report() {
-		if (A_IsCompiled) {
-			return 0
-		}
-
-		msgbox, % this._buildReport()
-		return true
-	}
-
-	fullReport() {
-		if (A_IsCompiled) {
-			return 0
-		}
-
-		msgReport := this._buildReport()
-		if (this.failTotal > 0) {
-			msgReport .= "`n=================================`n"
-		}
-		loop % this.log.Count() {
-			msgReport .= this.log[A_Index]
-		}
-
-		; choose the msgbox icon
-		if (this.failTotal > 0) {
-			l_options := 48
-		} else {
-			l_options := 64
-		}
-		this._stdOut(msgReport)
-		msgbox, % l_options, unit-testing.ahk, % msgReport
-		return msgReport
-	}
-
-	writeResultsToFile(param_filepath:="", openFile:=0) {
-		if (A_IsCompiled) {
-			return 0
-		}
-
-		; prepare
-		if (param_filepath != "") {
-			logpath := param_filepath
-		} else {
-			logpath := this.logresult_dir
-		}
-
-		; create
-		try {
-			FileDelete, % logpath
-		} catch {
-			; do nothing
-		}
-
-		msgReport := this._buildReport()
-		FileAppend, % msgReport "`n`n", % logpath
-		for key, value in this.log {
-			FileAppend, % value, % logpath
-		}
-		if (openFile) {
-			Run, % logpath
-		}
-		return true
-	}
-
-	/**
-	  * Outputs error report to debug console
-	  */
-	sendReportToDebugConsole() {
-		if (A_IsCompiled) {
-			return 0
-		}
-
-		msgReport := this._buildReport() . "`n"
-		for _, value in this.log {
-			msgReport .= value
-		}
-		OutputDebug, % Rtrim(msgReport, "`r`n")
-	}
-
-	; Internal functions
-	_buildReport() {
-		if (A_IsCompiled) {
-			return 0
-		}
-
-		; create
-		this.percentsuccess := floor( ( this.successTotal / this.testTotal ) * 100 )
-		returntext := this.testTotal " tests completed with " this.percentsuccess "% success (" this.failTotal " failures)"
-		if (this.failTotal = 1) {
-			returntext := StrReplace(returntext, "failures", "failure")
-		}
-		if (this.testTotal = 1) {
-			returntext := StrReplace(returntext, "tests", "test")
-		}
-		return returntext
-	}
-
-	_print(param_obj) {
-		if (IsObject(param_obj)) {
-			for key, value in param_obj {
-				if key is not Number
-				{
-					output .= """" . key . """:"
-				} else {
-					output .= key . ":"
-				}
-				if (IsObject(value)) {
-					output .= "[" . this._print(value) . "]"
-				} else if value is not Number
-				{
-					output .= """" . value . """"
-				}
-				else {
-					output .= value
-				}
-				output .= ", "
-			}
-			StringTrimRight, output, output, 2
-			return output
-		}
-		return param_obj
-	}
-
-	_stdOut(output:="") {
-		try {
-			DllCall("AttachConsole", "int", -1) || DllCall("AllocConsole")
-			FileAppend, % output "`n", CONOUT$
-			DllCall("FreeConsole")
-		} catch error {
-			return false
-		}
-		return true
-	}
+	return true
+}
 }

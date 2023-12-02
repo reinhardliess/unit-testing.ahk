@@ -4,11 +4,13 @@
 #Include %A_ScriptDir%\..\export.ahk
 SetBatchLines, -1
 
+; to test .toThrow() matcher
 Class CustomError {
-  
 }
 
-; to test .toThrow() matcher
+class TypeError {
+}
+
 createError() {
   Throw, "Error"
 }
@@ -19,6 +21,7 @@ createCustomError() {
 
 createNoError() {
 }
+; to test .toThrow() matcher end
 
 assert := new unittesting()
 
@@ -40,7 +43,6 @@ assert.group(".notEqual")
 assert.label("vars, arrays, objects")
 assert.notEqual("hello", "Hello")
 assert.notEqual(["hello"], ["world"])
-; assert.notEqual({"key": "value"}, {"key": "differentValue"})
 assert.notEqual({"key": "value"}, {"key": "differentValue"})
 
 
@@ -48,8 +50,11 @@ assert.group(".toThrow")
 assert.label("function throwing error")
 assert.toThrow(func("createError"))
 
-assert.label("function throwing error of type CustomError")
-assert.toThrow(func("createCustomError"), "CustomError")
+assert.label("function throwing error of type CustomError (class object)")
+assert.toThrow(func("createCustomError"), CustomError)
+
+assert.label("function throwing error of CustomError (instance)")
+assert.toThrow(func("createCustomError"), new CustomError)
 
 assert2 := new unittesting()
 assert.label("function not throwing error")
@@ -57,13 +62,13 @@ assert2.toThrow(func("createNoError"))
 assert.test(assert2.failTotal, 1)
 
 assert.label("function throwing 'CustomError', expecting 'TypeError'")
-assert2.toThrow(func("createCustomError"), "TypeError")
+assert2.toThrow(func("createCustomError"), TypeError)
 assert.test(assert2.failTotal, 2)
 
 assert.label("function throwing error string, expecting 'TypeError'")
-assert2.toThrow(func("createError"), "TypeError")
+assert2.toThrow(func("createError"), TypeError)
 assert.test(assert2.failTotal, 3)
-assert2.sendReportToDebugConsole()
+; assert2.sendReportToDebugConsole()
 ; OutputDebug, % "`n"
 
 
