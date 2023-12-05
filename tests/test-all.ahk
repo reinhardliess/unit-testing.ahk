@@ -45,7 +45,7 @@ assert.notEqual("hello", "Hello")
 assert.notEqual(["hello"], ["world"])
 assert.notEqual({"key": "value"}, {"key": "differentValue"})
 
-
+;; .toThrow()
 assert.group(".toThrow")
 assert.label("function throwing error")
 assert.toThrow(func("createError"))
