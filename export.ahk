@@ -58,7 +58,7 @@ Class unittesting {
 		}
 		this.log.push("Test Number: " this.testTotal "`n")
 		this.log.push("Expected: " param_expected "`n")
-		this.log.push("Actual: " param_actual "`n")
+		this.log.push("Actual:   " param_actual "`n")
 		if (param_msg != "") {
 			this.log.push(param_msg "`n")
 		}
@@ -139,7 +139,7 @@ Class unittesting {
 	  */
 	toThrow(param_function, param_errType:="") {
 		if (param_errType && !isObject(param_errType)) {
-			throw Error(format("{1}: TypeError: Didn't receive object for param_errType", A_ThisFunc))
+			throw TypeError("TypeError: Didn't receive object for param_errType",, param_errType)
 		}
 
 		hasPassedTest := false
@@ -159,10 +159,11 @@ Class unittesting {
 
 		if (hasPassedTest) {
 			this.successTotal++
+			return err
 		} else {
 			this._logTestFail(actual, expected)
+			return false
 		}
-		return hasPassedTest
 	}
 
 	/**

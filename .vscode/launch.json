@@ -17,7 +17,8 @@
       "usePerfTips": "{{elapsedTime_ms}}ms elapsed.",
       "useOutputDebug": {
         "useTrailingLinebreak": true
-      }
+      },
+      "internalConsoleOptions": "openOnSessionStart"
     }
     
   ]
